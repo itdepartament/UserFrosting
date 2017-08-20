@@ -361,10 +361,7 @@ class AccountController extends SimpleController
         $ms->addMessageTranslated('success', 'WELCOME', $currentUser->export());
 
         // Set redirect, if relevant
-        $determineRedirectOnLogin = $this->ci->determineRedirectOnLogin;
-        $response = $determineRedirectOnLogin($response);
-
-        return $response->withStatus(200);
+        return $this->ci->redirector->onLogin($request, $response, $args);
     }
 
     /**
@@ -424,10 +421,9 @@ class AccountController extends SimpleController
         /** @var UserFrosting\Sprinkle\Account\Authenticate\Authenticator $authenticator */
         $authenticator = $this->ci->authenticator;
 
-        // Forward to dashboard if user is already logged in
-        // TODO: forward to user's landing page or last visited page
+        // Forward user if they are already logged in
         if ($authenticator->check()) {
-            return $response->withRedirect($this->ci->router->pathFor('dashboard'), 302);
+            return $this->ci->redirector->onAlreadyLoggedIn($request, $response, $args);
         }
 
         // Load validation rules
@@ -577,10 +573,9 @@ class AccountController extends SimpleController
         /** @var UserFrosting\Sprinkle\Account\Authenticate\Authenticator $authenticator */
         $authenticator = $this->ci->authenticator;
 
-        // Forward to dashboard if user is already logged in
-        // TODO: forward to user's landing page or last visited page
+        // Forward user if they are already logged in
         if ($authenticator->check()) {
-            return $response->withRedirect($this->ci->router->pathFor('dashboard'), 302);
+            return $this->ci->redirector->onAlreadyLoggedIn($request, $response, $args);
         }
 
         // Load validation rules
@@ -1003,14 +998,10 @@ class AccountController extends SimpleController
 
         $ms->addMessageTranslated('success', 'PASSWORD.UPDATED');
 
-        // Log out any existing user, and create a new session
-
-        /** @var UserFrosting\Sprinkle\Account\Database\Models\User $currentUser */
-        $currentUser = $this->ci->currentUser;
-
         /** @var UserFrosting\Sprinkle\Account\Authenticate\Authenticator $authenticator */
         $authenticator = $this->ci->authenticator;
 
+        // Log out any existing user, and create a new session
         if ($authenticator->check()) {
             $authenticator->logout();
         }

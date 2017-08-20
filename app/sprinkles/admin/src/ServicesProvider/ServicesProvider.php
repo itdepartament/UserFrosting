@@ -9,6 +9,7 @@ namespace UserFrosting\Sprinkle\Admin\ServicesProvider;
 
 use UserFrosting\Sprinkle\Account\Authenticate\Authenticator;
 use UserFrosting\Sprinkle\Account\Authorize\AuthorizationManager;
+use UserFrosting\Sprinkle\Admin\Http\Redirector;
 use UserFrosting\Sprinkle\Core\Facades\Debug;
 
 /**
@@ -42,24 +43,11 @@ class ServicesProvider
         });
 
         /**
-         * Returns a callback that handles setting the `UF-Redirect` header after a successful login.
+         * Handles redirects after account-related actions (login, etc).
          */
-        $container['determineRedirectOnLogin'] = function ($c) {
-            return function ($response) use ($c)
-            {
-                /** @var UserFrosting\Sprinkle\Account\Authorize\AuthorizationManager */
-                $authorizer = $c->authorizer;
-
-                $currentUser = $c->authenticator->user();
-
-                if ($authorizer->checkAccess($currentUser, 'uri_dashboard')) {
-                    return $response->withHeader('UF-Redirect', $c->router->pathFor('dashboard'));
-                } elseif ($authorizer->checkAccess($currentUser, 'uri_account_settings')) {
-                    return $response->withHeader('UF-Redirect', $c->router->pathFor('settings'));
-                } else {
-                    return $response->withHeader('UF-Redirect', $c->router->pathFor('index'));
-                }
-            };
+        $container['redirector'] = function ($c) {
+            $redirector = new Redirector($c);
+            return $redirector;
         };
     }
 }
